@@ -38,22 +38,17 @@ src/
 # Python 3.8+ required
 python --version
 ```
-```bash
-# Create virtual environment
-python3 -m venv venv
-source venv/bin/activate  # Linux/Mac
-# or: venv\Scripts\activate  # Windows
-
-# Install dependencies
-pip install -r requirements.txt
-
 ### Installation
 
 ```bash
 # Clone or extract the project
 cd Lab01_ID1_ID2_ID3_ID4_ID5/
 
+python3 -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or: venv\Scripts\activate  # Windows
 # Install dependencies
+
 pip install -r requirements.txt
 ```
 
