@@ -1,0 +1,31 @@
+{
+  "description": "Network simulation configuration",
+  "min_delay": 0.01,
+  "max_delay": 0.1,
+  "drop_rate": 0.05,
+  "duplicate_rate": 0.02,
+  "rate_limit": 100,
+  "scenarios": {
+    "stable": {
+      "min_delay": 0.001,
+      "max_delay": 0.01,
+      "drop_rate": 0.0,
+      "duplicate_rate": 0.0,
+      "rate_limit": 1000
+    },
+    "unstable": {
+      "min_delay": 0.05,
+      "max_delay": 0.5,
+      "drop_rate": 0.2,
+      "duplicate_rate": 0.1,
+      "rate_limit": 50
+    },
+    "realistic": {
+      "min_delay": 0.01,
+      "max_delay": 0.15,
+      "drop_rate": 0.05,
+      "duplicate_rate": 0.02,
+      "rate_limit": 100
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "chain_id": "mainnet",
+  "num_nodes": 8,
+  "num_blocks": 3,
+  "num_transactions": 10,
+  "simulation_duration": 2.0,
+  "log_file": "logs/simulation.json",
+  "network": {
+    "min_delay": 0.01,
+    "max_delay": 0.1,
+    "drop_rate": 0.05,
+    "duplicate_rate": 0.02,
+    "rate_limit": 100
+  }
+}
