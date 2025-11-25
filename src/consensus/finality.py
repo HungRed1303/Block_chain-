@@ -1,8 +1,9 @@
 class FinalityManager:
     """Quản lý finality của blocks"""
     
-    def __init__(self, validator_set):
+    def __init__(self, validator_set, chain_id="mainnet"):
         self.validators = set(validator_set)
+        self.chain_id = chain_id
         self.finalized_blocks = {}  # height -> block_hash
         self.pending_blocks = {}  # height -> {block_hash -> block}
     
@@ -25,7 +26,7 @@ class FinalityManager:
         
         # Verify all votes
         for vote in precommit_votes:
-            if not vote.verify():
+            if not vote.verify(self.chain_id):
                 return False
             if vote.voter_id not in self.validators:
                 return False

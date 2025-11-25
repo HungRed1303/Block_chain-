@@ -33,15 +33,16 @@ class Vote:
 class VoteCollector:
     """Thu thập và đếm votes"""
     
-    def __init__(self, validator_set):
+    def __init__(self, validator_set, chain_id="mainnet"):
         self.validators = set(validator_set)
         self.total_validators = len(validator_set)
+        self.chain_id = chain_id
         self.prevotes = {}  # (height, block_hash) -> set of voter_ids
         self.precommits = {}  # (height, block_hash) -> set of voter_ids
     
     def add_vote(self, vote):
         """Thêm một vote"""
-        if not vote.verify():
+        if not vote.verify(self.chain_id):
             return False
         
         if vote.voter_id not in self.validators:

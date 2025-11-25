@@ -17,7 +17,7 @@ class Node:
         self.signer = Signer(chain_id)
         
         # State & Ledger
-        self.state = State()
+        self.state = State(chain_id)
         self.ledger = []  # List of finalized blocks
         self.pending_transactions = []
         

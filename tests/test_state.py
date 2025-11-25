@@ -4,6 +4,9 @@ from src.execution.transaction import Transaction
 from src.crypto.keys import KeyPair
 from src.crypto.signatures import Signer
 
+# Use consistent chain_id
+CHAIN_ID = "test"
+
 def test_state_initialization():
     """Test khởi tạo state"""
     state = State()
@@ -24,7 +27,7 @@ def test_state_get_set():
 def test_state_apply_transaction():
     """Test apply transaction to state"""
     kp = KeyPair()
-    signer = Signer("test")
+    signer = Signer(CHAIN_ID)
     
     # Create valid transaction
     tx_data = {
@@ -111,7 +114,7 @@ def test_state_multiple_transactions():
     """Test applying multiple transactions"""
     kp1 = KeyPair()
     kp2 = KeyPair()
-    signer = Signer("test")
+    signer = Signer(CHAIN_ID)
     
     state = State()
     

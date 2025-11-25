@@ -29,8 +29,8 @@ def test_network_basic():
     msg = Message(MessageType.TRANSACTION, "node1", {"test": "data"})
     network.send("node1", "node2", msg)
     
-    # Process
-    network.step(0.1)
+    # Process with sufficient time for max_delay
+    network.step(0.05)
     
     # Check received
     assert msg.msg_id in node2.seen_messages
@@ -56,8 +56,8 @@ def test_network_broadcast():
     msg = Message(MessageType.TRANSACTION, "node0", {"test": "broadcast"})
     network.broadcast("node0", msg)
     
-    # Process
-    network.step(0.1)
+    # Process with sufficient time
+    network.step(0.05)
     
     # Check all other nodes received
     for i in range(1, 5):
@@ -89,7 +89,7 @@ def test_network_drop():
     network.send("node1", "node2", msg)
     
     # Process
-    network.step(0.1)
+    network.step(0.05)
     
     # Should be dropped
     assert msg.msg_id not in node2.seen_messages
@@ -116,6 +116,9 @@ def test_rate_limiting():
     
     network.register_node(node1)
     network.register_node(node2)
+    
+    node1.set_network(network)
+    node2.set_network(network)
     
     # Send 10 messages
     for i in range(10):
