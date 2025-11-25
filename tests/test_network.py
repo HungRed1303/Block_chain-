@@ -3,6 +3,9 @@ import time
 from src.network.simulator import NetworkSimulator
 from src.network.node import Node
 from src.network.message import Message, MessageType
+from src.execution.transaction import Transaction
+from src.crypto.keys import KeyPair
+from src.crypto.signatures import Signer
 
 def test_network_basic():
     """Test basic network functionality"""
@@ -25,8 +28,19 @@ def test_network_basic():
     node1.set_network(network)
     node2.set_network(network)
     
-    # Send message
-    msg = Message(MessageType.TRANSACTION, "node1", {"test": "data"})
+    # Create a valid transaction
+    kp = KeyPair()
+    signer = Signer("mainnet")
+    tx_data = {
+        "sender": "alice",
+        "key": "alice/test",
+        "value": "data"
+    }
+    signature = signer.sign_transaction(kp.private_key, tx_data)
+    tx = Transaction("alice", "alice/test", "data", signature, kp.public_key)
+    
+    # Send transaction message
+    msg = Message(MessageType.TRANSACTION, "node1", tx)
     network.send("node1", "node2", msg)
     
     # Process with sufficient time for max_delay
@@ -34,6 +48,8 @@ def test_network_basic():
     
     # Check received
     assert msg.msg_id in node2.seen_messages
+    # Check transaction was added to pending
+    assert len(node2.pending_transactions) == 1
 
 def test_network_broadcast():
     """Test broadcast to multiple nodes"""
@@ -52,8 +68,19 @@ def test_network_broadcast():
         network.register_node(node)
         node.set_network(network)
     
+    # Create a valid transaction
+    kp = KeyPair()
+    signer = Signer("mainnet")
+    tx_data = {
+        "sender": "alice",
+        "key": "alice/broadcast",
+        "value": "test"
+    }
+    signature = signer.sign_transaction(kp.private_key, tx_data)
+    tx = Transaction("alice", "alice/broadcast", "test", signature, kp.public_key)
+    
     # Broadcast from node0
-    msg = Message(MessageType.TRANSACTION, "node0", {"test": "broadcast"})
+    msg = Message(MessageType.TRANSACTION, "node0", tx)
     network.broadcast("node0", msg)
     
     # Process with sufficient time
@@ -62,6 +89,7 @@ def test_network_broadcast():
     # Check all other nodes received
     for i in range(1, 5):
         assert msg.msg_id in nodes[i].seen_messages
+        assert len(nodes[i].pending_transactions) == 1
 
 def test_network_drop():
     """Test message drop"""

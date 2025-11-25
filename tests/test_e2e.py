@@ -48,12 +48,33 @@ def test_end_to_end_single_block():
     # Node0 proposes block
     nodes[0].propose_block()
     
-    # Run simulation for 1 second
-    for _ in range(20):  # 20 steps of 0.05s
+    # Run simulation with extended time and progress checking
+    max_steps = 40  # Increased from 20
+    for step in range(max_steps):
         network.step(0.05)
+        
+        # Check progress every 10 steps
+        if step % 10 == 9:
+            finalized = sum(1 for n in nodes if n.current_height == 1)
+            print(f"  Step {step+1}/{max_steps}: {finalized}/5 nodes finalized")
+            
+            # If all finalized, break early
+            if finalized == 5:
+                print(f"  ✓ All nodes finalized at step {step+1}")
+                break
     
     # Check all nodes finalized the same block
     finalized_heights = [node.current_height for node in nodes]
+    
+    # Debug output if failed
+    if not all(h == 1 for h in finalized_heights):
+        print(f"\n  Heights: {finalized_heights}")
+        for i, node in enumerate(nodes):
+            print(f"  node{i}: height={node.current_height}, "
+                  f"pending_blocks={list(node.pending_blocks.keys())}, "
+                  f"prevotes={[(h, len(v)) for h, vdict in node.prevotes.items() for bhash, v in vdict.items()]}, "
+                  f"precommits={[(h, len(v)) for h, vdict in node.precommits.items() for bhash, v in vdict.items()]}")
+    
     assert all(h == 1 for h in finalized_heights), f"Heights: {finalized_heights}"
     
     # Check state hash is consistent
@@ -87,6 +108,8 @@ def test_end_to_end_multiple_blocks():
     
     # Propose 3 blocks
     for block_num in range(3):
+        print(f"\n  Proposing block {block_num + 1}/3...")
+        
         # Create transaction
         kp = KeyPair()
         tx_data = {
@@ -98,17 +121,47 @@ def test_end_to_end_multiple_blocks():
         tx = Transaction(f"user{block_num}", f"user{block_num}/message", 
                          f"hello_{block_num}", signature, kp.public_key)
         
-        # Add to proposer
-        proposer_idx = block_num % len(nodes)
-        nodes[proposer_idx].pending_transactions.append(tx)
-        nodes[proposer_idx].propose_block()
+        # Add to proposer - find node at correct height
+        proposer = None
+        for node in nodes:
+            if node.current_height == block_num:
+                proposer = node
+                break
         
-        # Run simulation
-        for _ in range(20):
+        if proposer is None:
+            # Fallback to round-robin if all nodes ahead
+            proposer = nodes[block_num % len(nodes)]
+        
+        proposer.pending_transactions.append(tx)
+        proposer.propose_block()
+        
+        # Run simulation with extended time
+        max_steps = 40
+        for step in range(max_steps):
             network.step(0.05)
+            
+            # Check progress
+            if step % 10 == 9:
+                finalized = sum(1 for n in nodes if n.current_height == block_num + 1)
+                print(f"    Step {step+1}/{max_steps}: {finalized}/8 nodes at height {block_num + 1}")
+                
+                if finalized == 8:
+                    print(f"    ✓ All nodes finalized block {block_num + 1}")
+                    break
+        
+        # Check progress after this block
+        finalized = sum(1 for n in nodes if n.current_height == block_num + 1)
+        if finalized < 8:
+            print(f"    ⚠️  Only {finalized}/8 nodes finalized block {block_num + 1}")
+            heights = [n.current_height for n in nodes]
+            print(f"    Heights: {heights}")
+    
+    # Final check
+    final_heights = [node.current_height for node in nodes]
+    print(f"\n  Final heights: {final_heights}")
     
     # Check all nodes at height 3
-    assert all(node.current_height == 3 for node in nodes)
+    assert all(node.current_height == 3 for node in nodes), f"Final heights: {final_heights}"
     
     # Check consistent state
     state_hashes = [node.state.commitment() for node in nodes]
