@@ -1,7 +1,7 @@
 {
   "chain_id": "mainnet",
-  "num_nodes": 4,
-  "num_blocks": 2,
+  "num_nodes": 9,
+  "num_blocks": 4,
   "num_transactions": 10,
   "simulation_duration": 2.0,
   "log_file": "logs/simulation.json",
