@@ -9,13 +9,13 @@ CHAIN_ID = "test"
 
 def test_state_initialization():
     """Test khởi tạo state"""
-    state = State()
+    state = State(CHAIN_ID)
     assert len(state.data) == 0
     assert state.commitment() is not None
 
 def test_state_get_set():
     """Test get/set operations"""
-    state = State()
+    state = State(CHAIN_ID)
     
     state.set("alice/balance", "100")
     assert state.get("alice/balance") == "100"
@@ -44,7 +44,7 @@ def test_state_apply_transaction():
         public_key=kp.public_key
     )
     
-    state = State()
+    state = State(CHAIN_ID)  # <-- FIX: Pass chain_id
     state.apply_transaction(tx)
     
     assert state.get("alice/message") == "hello"
@@ -60,18 +60,18 @@ def test_state_apply_invalid_transaction():
         public_key=None
     )
     
-    state = State()
+    state = State(CHAIN_ID)  # <-- FIX: Pass chain_id
     with pytest.raises(ValueError):
         state.apply_transaction(tx)
 
 def test_state_commitment_deterministic():
     """Test state commitment is deterministic"""
-    state1 = State()
+    state1 = State(CHAIN_ID)
     state1.set("b", "2")
     state1.set("a", "1")
     state1.set("c", "3")
     
-    state2 = State()
+    state2 = State(CHAIN_ID)
     state2.set("a", "1")
     state2.set("c", "3")
     state2.set("b", "2")
@@ -81,7 +81,7 @@ def test_state_commitment_deterministic():
 
 def test_state_commitment_changes():
     """Test state commitment changes when data changes"""
-    state = State()
+    state = State(CHAIN_ID)
     hash1 = state.commitment()
     
     state.set("alice/balance", "100")
@@ -96,7 +96,7 @@ def test_state_commitment_changes():
 
 def test_state_copy():
     """Test state copy"""
-    state1 = State()
+    state1 = State(CHAIN_ID)
     state1.set("alice/balance", "100")
     state1.set("bob/balance", "50")
     
@@ -116,7 +116,7 @@ def test_state_multiple_transactions():
     kp2 = KeyPair()
     signer = Signer(CHAIN_ID)
     
-    state = State()
+    state = State(CHAIN_ID)  # <-- FIX: Pass chain_id
     
     # Transaction 1
     tx1_data = {

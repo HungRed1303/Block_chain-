@@ -7,6 +7,8 @@ from src.execution.transaction import Transaction
 from src.crypto.keys import KeyPair
 from src.crypto.signatures import Signer
 
+CHAIN_ID = "mainnet"
+
 def test_end_to_end_single_block():
     """Test end-to-end: propose, vote, finalize một block"""
     # Setup network
@@ -21,7 +23,7 @@ def test_end_to_end_single_block():
     network = NetworkSimulator(config)
     
     # Create 5 nodes
-    nodes = [Node(f"node{i}", is_validator=True) for i in range(5)]
+    nodes = [Node(f"node{i}", is_validator=True, chain_id=CHAIN_ID) for i in range(5)]
     validator_ids = [f"node{i}" for i in range(5)]
     
     for node in nodes:
@@ -31,7 +33,7 @@ def test_end_to_end_single_block():
     
     # Create transaction
     kp = KeyPair()
-    signer = Signer("mainnet")
+    signer = Signer(CHAIN_ID)
     tx_data = {
         "sender": "alice",
         "key": "alice/balance",
@@ -73,7 +75,7 @@ def test_end_to_end_multiple_blocks():
     network = NetworkSimulator(config)
     
     # Create 8 nodes (minimum required)
-    nodes = [Node(f"node{i}", is_validator=True) for i in range(8)]
+    nodes = [Node(f"node{i}", is_validator=True, chain_id=CHAIN_ID) for i in range(8)]
     validator_ids = [f"node{i}" for i in range(8)]
     
     for node in nodes:
@@ -81,7 +83,7 @@ def test_end_to_end_multiple_blocks():
         node.set_network(network)
         node.set_validators(validator_ids)
     
-    signer = Signer("mainnet")
+    signer = Signer(CHAIN_ID)
     
     # Propose 3 blocks
     for block_num in range(3):
@@ -126,7 +128,7 @@ def test_network_with_delays_and_drops():
     
     network = NetworkSimulator(config)
     
-    nodes = [Node(f"node{i}", is_validator=True) for i in range(8)]
+    nodes = [Node(f"node{i}", is_validator=True, chain_id=CHAIN_ID) for i in range(8)]
     validator_ids = [f"node{i}" for i in range(8)]
     
     for node in nodes:
@@ -136,7 +138,7 @@ def test_network_with_delays_and_drops():
     
     # Create and propose block
     kp = KeyPair()
-    signer = Signer("mainnet")
+    signer = Signer(CHAIN_ID)
     tx_data = {
         "sender": "alice",
         "key": "alice/test",

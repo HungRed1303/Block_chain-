@@ -3,8 +3,9 @@ from src.crypto.hashing import Hasher
 class State:
     """Quản lý state (key-value store)"""
     
-    def __init__(self):
+    def __init__(self, chain_id="mainnet"):
         self.data = {}  # key -> value
+        self.chain_id = chain_id
     
     def get(self, key):
         """Lấy value theo key"""
@@ -16,7 +17,7 @@ class State:
     
     def apply_transaction(self, tx):
         """Apply một transaction lên state"""
-        if not tx.verify():
+        if not tx.verify(self.chain_id):
             raise ValueError(f"Invalid transaction: {tx}")
         
         # Update state
@@ -28,7 +29,7 @@ class State:
     
     def copy(self):
         """Tạo bản copy của state"""
-        new_state = State()
+        new_state = State(self.chain_id)
         new_state.data = self.data.copy()
         return new_state
     

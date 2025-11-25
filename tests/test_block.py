@@ -5,6 +5,8 @@ from src.execution.state import State
 from src.crypto.keys import KeyPair
 from src.crypto.signatures import Signer
 
+CHAIN_ID = "test"
+
 def test_block_creation():
     """Test creating a block"""
     block = Block(
@@ -39,7 +41,7 @@ def test_block_hash_changes_with_data():
 def test_block_with_transactions():
     """Test block with transactions"""
     kp = KeyPair()
-    signer = Signer("test")
+    signer = Signer(CHAIN_ID)
     
     tx_data = {
         "sender": "alice",
@@ -72,7 +74,7 @@ def test_block_compute_correct_state_hash():
     """Test computing correct state hash from transactions"""
     kp1 = KeyPair()
     kp2 = KeyPair()
-    signer = Signer("test")
+    signer = Signer(CHAIN_ID)
     
     # Create transactions
     tx1_data = {"sender": "alice", "key": "alice/balance", "value": "100"}
@@ -84,7 +86,7 @@ def test_block_compute_correct_state_hash():
     tx2 = Transaction("bob", "bob/balance", "50", sig2, kp2.public_key)
     
     # Apply to state
-    state = State()
+    state = State(CHAIN_ID)  # <-- FIX: Pass chain_id
     state.apply_transaction(tx1)
     state.apply_transaction(tx2)
     expected_hash = state.commitment()

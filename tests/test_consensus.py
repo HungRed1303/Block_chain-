@@ -5,10 +5,12 @@ from src.consensus.vote import Vote, VoteCollector
 from src.consensus.finality import FinalityManager
 from src.execution.block import Block
 
+CHAIN_ID = "test"
+
 def test_vote_creation_and_verification():
     """Test vote creation and verification"""
     kp = KeyPair()
-    signer = Signer("test")
+    signer = Signer(CHAIN_ID)
     
     vote_data = {
         "height": 1,
@@ -28,17 +30,17 @@ def test_vote_creation_and_verification():
         public_key=kp.public_key
     )
     
-    assert vote.verify(chain_id="test")
+    assert vote.verify(chain_id=CHAIN_ID)
 
 def test_vote_collector_majority():
     """Test vote collector với majority voting"""
     validators = ["node1", "node2", "node3", "node4", "node5"]
-    collector = VoteCollector(validators)
+    collector = VoteCollector(validators, CHAIN_ID)  # <-- FIX: Pass chain_id
     
     # Create votes from 3 nodes (majority)
     for i in range(3):
         kp = KeyPair()
-        signer = Signer("test")
+        signer = Signer(CHAIN_ID)
         vote_data = {
             "height": 1,
             "block_hash": "abc123",
@@ -55,7 +57,7 @@ def test_vote_collector_majority():
 def test_finality_manager():
     """Test finality manager"""
     validators = ["node1", "node2", "node3"]
-    fm = FinalityManager(validators)
+    fm = FinalityManager(validators, CHAIN_ID)  # <-- FIX: Pass chain_id
     
     # Create block
     block = Block(1, "genesis", [], "state_hash_1")
@@ -65,7 +67,7 @@ def test_finality_manager():
     votes = []
     for i in range(2):
         kp = KeyPair()
-        signer = Signer("test")
+        signer = Signer(CHAIN_ID)
         vote_data = {
             "height": 1,
             "block_hash": block.hash,
@@ -85,7 +87,7 @@ def test_finality_manager():
 def test_finality_safety():
     """Test that two different blocks at same height cannot be finalized"""
     validators = ["node1", "node2", "node3"]
-    fm = FinalityManager(validators)
+    fm = FinalityManager(validators, CHAIN_ID)  # <-- FIX: Pass chain_id
     
     # First block
     block1 = Block(1, "genesis", [], "state_hash_1")
@@ -94,7 +96,7 @@ def test_finality_safety():
     votes1 = []
     for i in range(2):
         kp = KeyPair()
-        signer = Signer("test")
+        signer = Signer(CHAIN_ID)
         vote_data = {
             "height": 1,
             "block_hash": block1.hash,
@@ -114,7 +116,7 @@ def test_finality_safety():
     votes2 = []
     for i in range(2):
         kp = KeyPair()
-        signer = Signer("test")
+        signer = Signer(CHAIN_ID)
         vote_data = {
             "height": 1,
             "block_hash": block2.hash,
