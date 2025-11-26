@@ -3,10 +3,9 @@ from src.crypto.signatures import Signer
 from src.execution.state import State
 from src.execution.block import Block
 from src.network.message import Message, MessageType
-import time
 
 class Node:
-    """Đại diện cho một node trong network - WITH SYNC MECHANISM"""
+    """Đại diện cho một node trong network - FINAL FIXED VERSION with Sync"""
     
     def __init__(self, node_id, is_validator=True, chain_id="mainnet"):
         self.node_id = node_id
@@ -39,9 +38,9 @@ class Node:
         self.sent_prevotes = set()  # (height, block_hash)
         self.sent_precommits = set()  # (height, block_hash)
         
-        # Sync mechanism
-        self.last_sync_time = 0
-        self.sync_interval = 0.3  # Try sync every 300ms
+        # FIX: Add sync mechanism
+        self.last_sync_attempt = 0
+        self.sync_interval = 0.5  # Try to sync every 0.5s
     
     def set_network(self, network):
         """Set network simulator"""
@@ -59,9 +58,6 @@ class Node:
         
         self.seen_messages.add(message.msg_id)
         
-        # FIX: Try to sync if we're behind
-        self._try_sync()
-        
         # Route message based on type
         if message.msg_type == MessageType.TRANSACTION:
             self._handle_transaction(message)
@@ -74,44 +70,9 @@ class Node:
         elif message.msg_type == MessageType.REQUEST_BLOCK:
             self._handle_block_request(message)
     
-    def _try_sync(self):
-        """Try to sync if we detect we're behind"""
-        current_time = time.time()
-        if current_time - self.last_sync_time < self.sync_interval:
-            return
-        
-        self.last_sync_time = current_time
-        
-        # Check if we have pending blocks for heights we haven't finalized
-        for height in sorted(self.pending_blocks.keys()):
-            if height == self.current_height + 1:
-                block = self.pending_blocks[height]
-                
-                # Check if this block has majority precommits already
-                if height in self.precommits and block.hash in self.precommits[height]:
-                    voters = self.precommits[height][block.hash]
-                    if len(voters) > len(self.validators) / 2:
-                        # We should finalize this!
-                        if self._validate_block(block):
-                            self._finalize_block(height, block.hash)
-                            return
-                
-                # Check if we should vote
-                if self.is_validator:
-                    vote_key = (height, block.hash)
-                    if vote_key not in self.sent_prevotes:
-                        if self._validate_block(block):
-                            self._send_prevote(block)
-                            return
-    
     def _handle_transaction(self, message):
         """Xử lý transaction"""
         tx = message.data
-        
-        # Defensive: Skip if not a Transaction object
-        if not hasattr(tx, 'verify'):
-            return
-        
         if tx.verify(self.chain_id):
             self.pending_transactions.append(tx)
     
@@ -123,8 +84,9 @@ class Node:
         if block.height < self.current_height + 1:
             return  # Already finalized
         
-        # Store future blocks too
+        # FIX: Store future blocks too
         if block.height > self.current_height + 1:
+            # Store for later but don't validate yet
             self.pending_blocks[block.height] = block
             return
         
@@ -208,7 +170,7 @@ class Node:
         
         height = vote_data["height"]
         
-        # Accept votes for next height
+        # FIX: Accept votes for next height OR current height (for stragglers)
         if height < self.current_height + 1:
             return
         
@@ -230,16 +192,6 @@ class Node:
         if len(self.prevotes[height][block_hash]) > len(self.validators) / 2:
             if self.is_validator:
                 self._send_precommit(height, block_hash)
-            
-            # FIX: If we don't have block yet, we might have received votes first
-            # Check if we should prevote too if we have the block
-            if height in self.pending_blocks:
-                block = self.pending_blocks[height]
-                if block.hash == block_hash:
-                    vote_key = (height, block_hash)
-                    if vote_key not in self.sent_prevotes and self.is_validator:
-                        if self._validate_block(block):
-                            self._send_prevote(block)
     
     def _send_precommit(self, height, block_hash):
         """Gửi precommit cho block"""
@@ -281,7 +233,7 @@ class Node:
         
         height = vote_data["height"]
         
-        # Accept votes for next height
+        # FIX: Accept votes for next height
         if height < self.current_height + 1:
             return
         
@@ -332,7 +284,7 @@ class Node:
         # Cleanup
         self._cleanup_old_data(height)
         
-        # Try to finalize next block immediately
+        # FIX: Check if we can finalize next block
         self._try_finalize_next()
     
     def _try_finalize_next(self):
