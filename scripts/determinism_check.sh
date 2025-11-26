@@ -1,24 +1,21 @@
 #!/bin/bash
-# Determinism Check Script
-# Runs simulation twice and compares logs
+# Determinism Check Script - FIXED VERSION
+# Compares final state and event sequence (not timestamps)
 
-set -e  # Exit on error
+set -e
 
 echo "========================================"
-echo "DETERMINISM CHECK"
+echo "DETERMINISM CHECK - FIXED"
 echo "========================================"
 
-# Colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
-# Configuration
 CONFIG="${1:-config/chain_config.json}"
 LOG_DIR="logs"
 
-# Create logs directory if not exists
 mkdir -p "$LOG_DIR"
 
 echo ""
@@ -39,11 +36,10 @@ fi
 cp "$LOG_DIR/simulation.json" "$LOG_DIR/run1.json"
 echo -e "${GREEN}✓ Run 1 completed${NC}"
 
-# Small delay
 sleep 1
 
 # Run 2
-echo -e "${YELLOW} Running simulation #2...${NC}"
+echo -e "${YELLOW}Running simulation #2...${NC}"
 python run.py "$CONFIG" > "$LOG_DIR/stdout2.log" 2>&1
 EXIT_CODE2=$?
 
@@ -56,52 +52,83 @@ fi
 cp "$LOG_DIR/simulation.json" "$LOG_DIR/run2.json"
 echo -e "${GREEN}✓ Run 2 completed${NC}"
 
-# Compare logs
 echo ""
-echo " Comparing results..."
+echo "Comparing results..."
 
-# Compute hashes
-HASH1=$(python3 -c "import json, hashlib; data = json.load(open('$LOG_DIR/run1.json')); print(hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest())")
-HASH2=$(python3 -c "import json, hashlib; data = json.load(open('$LOG_DIR/run2.json')); print(hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest())")
+# Extract final states (ignore timestamps)
+python3 << 'PYTHON'
+import json
+import hashlib
 
-echo "  Run 1 hash: $HASH1"
-echo "  Run 2 hash: $HASH2"
-
-# Extract final state from logs
-STATE1=$(python3 -c "import json; events = json.load(open('$LOG_DIR/run1.json')); finalized = [e for e in events if e['type'] == 'block_finalized']; print(finalized[-1] if finalized else {})")
-STATE2=$(python3 -c "import json; events = json.load(open('$LOG_DIR/run2.json')); finalized = [e for e in events if e['type'] == 'block_finalized']; print(finalized[-1] if finalized else {})")
-
-echo ""
-echo " Final states:"
-echo "  Run 1: $STATE1"
-echo "  Run 2: $STATE2"
-
-# Detailed comparison
-echo ""
-if [ "$HASH1" = "$HASH2" ]; then
-    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN} DETERMINISM CHECK PASSED${NC}"
-    echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
-    echo "✓ Logs are byte-identical"
-    echo "✓ Events occurred in same order"
-    echo "✓ Final states match"
-    echo ""
-    echo "Log hash: $HASH1"
-    exit 0
-else
-    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${RED} DETERMINISM CHECK FAILED${NC}"
-    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo ""
-    echo "✗ Logs differ between runs"
-    echo "✗ Non-deterministic behavior detected"
-    echo ""
+def extract_final_state(log_file):
+    """Extract final state hash and event sequence (without timestamps)"""
+    with open(log_file, 'r') as f:
+        events = json.load(f)
     
-    # Show diff (first few lines)
-    echo "Differences (first 20 lines):"
-    diff <(python3 -m json.tool "$LOG_DIR/run1.json" | head -20) \
-         <(python3 -m json.tool "$LOG_DIR/run2.json" | head -20) || true
+    # Extract event types and data (ignore timestamps)
+    event_sequence = []
+    final_state = None
     
-    exit 1
-fi
+    for event in events:
+        event_type = event.get('type')
+        event_data = event.get('data', {})
+        
+        # Store event type and relevant data
+        event_sequence.append({
+            'type': event_type,
+            'data': event_data
+        })
+        
+        # Track final state
+        if event_type == 'block_finalized':
+            final_state = event_data
+    
+    return {
+        'event_sequence': event_sequence,
+        'final_state': final_state,
+        'num_events': len(events)
+    }
+
+# Compare runs
+run1 = extract_final_state('logs/run1.json')
+run2 = extract_final_state('logs/run2.json')
+
+print("Run 1:")
+print(f"  Events: {run1['num_events']}")
+print(f"  Final state: {run1['final_state']}")
+
+print("\nRun 2:")
+print(f"  Events: {run2['num_events']}")
+print(f"  Final state: {run2['final_state']}")
+
+# Check determinism
+issues = []
+
+# 1. Check same number of events
+if run1['num_events'] != run2['num_events']:
+    issues.append(f"Different event counts: {run1['num_events']} vs {run2['num_events']}")
+
+# 2. Check same event sequence
+if run1['event_sequence'] != run2['event_sequence']:
+    issues.append("Event sequences differ")
+
+# 3. Check same final state
+if run1['final_state'] != run2['final_state']:
+    issues.append(f"Final states differ: {run1['final_state']} vs {run2['final_state']}")
+
+if issues:
+    print("\n" + "="*60)
+    print("DETERMINISM CHECK FAILED")
+    print("="*60)
+    for issue in issues:
+        print(f"  ✗ {issue}")
+    exit(1)
+else:
+    print("\n" + "="*60)
+    print("✓ DETERMINISM CHECK PASSED")
+    print("="*60)
+    print("  ✓ Same number of events")
+    print("  ✓ Same event sequence")
+    print("  ✓ Same final state")
+    exit(0)
+PYTHON

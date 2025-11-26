@@ -102,33 +102,52 @@ class Node:
             self._send_prevote(block)
     
     def _validate_block(self, block):
-        """Validate một block"""
-        # Check height
+        """Validate a block - FIXED VERSION"""
+        # Check height matches expectation
         if block.height != self.current_height + 1:
+            print(f"[Node {self.node_id}] Block height {block.height} != expected {self.current_height + 1}")
             return False
         
         # Check parent hash
         if self.ledger:
-            if block.parent_hash != self.ledger[-1].hash:
+            # Have ledger: must match last block
+            expected_parent = self.ledger[-1].hash
+            if block.parent_hash != expected_parent:
+                print(f"[Node {self.node_id}] Parent hash mismatch: {block.parent_hash[:8]} != {expected_parent[:8]}")
                 return False
         else:
-            if block.height == 1 and block.parent_hash != "genesis":
+            # No ledger: must be height 1 with genesis parent
+            if block.height != 1:
+                print(f"[Node {self.node_id}] First block must be height 1, got {block.height}")
+                return False
+            if block.parent_hash != "genesis":
+                print(f"[Node {self.node_id}] First block must have genesis parent, got {block.parent_hash}")
                 return False
         
-        # Verify state hash
-        temp_state = self.state.copy()
+        # Verify all transactions are valid
         for tx in block.transactions:
             if not tx.verify(self.chain_id):
-                return False
-            try:
-                temp_state.apply_transaction(tx)
-            except:
+                print(f"[Node {self.node_id}] Invalid transaction: {tx}")
                 return False
         
-        if temp_state.commitment() != block.state_hash:
+        # Verify state hash by re-executing
+        temp_state = self.state.copy()
+        try:
+            for tx in block.transactions:
+                temp_state.apply_transaction(tx)
+        except Exception as e:
+            print(f"[Node {self.node_id}] Error applying transactions: {e}")
+            return False
+        
+        expected_state_hash = temp_state.commitment()
+        if block.state_hash != expected_state_hash:
+            print(f"[Node {self.node_id}] State hash mismatch:")
+            print(f"  Expected: {expected_state_hash[:16]}...")
+            print(f"  Got:      {block.state_hash[:16]}...")
             return False
         
         return True
+
     
     def _send_prevote(self, block):
         """Gửi prevote cho block"""
