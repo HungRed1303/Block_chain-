@@ -3,7 +3,7 @@
   "num_nodes": 8,
   "num_blocks": 3,
   "num_transactions": 3,
-  "simulation_duration": 2.0,
+  "simulation_duration": 4.0,
   "log_file": "logs/simulation.json",
   "network": {
     "min_delay": 0.005,
