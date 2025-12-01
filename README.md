@@ -226,7 +226,7 @@ open htmlcov/index.html
 ## 📁 Project Structure
 
 ```
-Lab01_ID1_ID2_ID3_ID4_ID5/
+BlockChain/
 ├── src/                          # Source code
 │   ├── crypto/                   # Cryptography layer
 │   │   ├── keys.py              # Ed25519 key management
