@@ -115,6 +115,7 @@ pytest tests/test_transaction.py -v     # Transaction validation
 pytest tests/test_block.py -v           # Block validation
 pytest tests/test_consensus.py -v       # Voting and finality
 pytest tests/test_network.py -v         # Network simulation
+pytest tests/test_network.py -v         # Attack tests
 
 # Integration tests
 pytest tests/test_e2e.py -v             # End-to-end scenarios
@@ -268,46 +269,6 @@ Lab01_ID1_ID2_ID3_ID4_ID5/
 └── REPORT.pdf                   # Technical report
 ```
 
-## 🐛 Known Issues and Limitations
-
-### Current Limitations
-
-1. **Liveness with High Drop Rate**: With drop_rate > 20%, some nodes may not finalize
-   - **Mitigation**: Extended wait periods and retry mechanism implemented
-   - **Expected**: >75% nodes finalize even under 20% drop rate
-
-2. **No Block Sync Protocol**: Nodes that fall behind cannot request missing blocks
-   - **Impact**: Stragglers may remain at lower height
-   - **Future Work**: Implement block sync mechanism
-
-3. **Determinism with Timestamps**: Logs include timestamps which vary between runs
-   - **Impact**: Logs not byte-identical, but event ordering is consistent
-   - **Workaround**: Compare final state hashes instead of full logs
-
-### Resolved Issues
-
-✅ **Proposer Self-Vote**: Fixed by making proposer self-receive its own block  
-✅ **Genesis Validation**: Fixed parent hash check for first block  
-✅ **Duplicate Votes**: Fixed by tracking sent votes with (height, block_hash) keys  
-✅ **Vote Counting**: Fixed by using sets instead of lists  
-
-## 🔬 Testing Scenarios
-
-### Scenario 1: Stable Network (Success Rate: 100%)
-- **Config**: 0% drop, 10ms delay
-- **Result**: All nodes finalize all blocks
-- **Time**: ~0.5s per block
-
-### Scenario 2: Realistic Network (Success Rate: 95%)
-- **Config**: 5% drop, 10-100ms delay
-- **Result**: >90% nodes finalize, some stragglers
-- **Time**: ~2s per block
-
-### Scenario 3: Unstable Network (Success Rate: 80%)
-- **Config**: 20% drop, 50-500ms delay
-- **Result**: >75% nodes finalize (majority maintained)
-- **Time**: ~5s per block
-
 ## 📚 References
 
 ### Academic Papers
@@ -332,11 +293,4 @@ Lab01_ID1_ID2_ID3_ID4_ID5/
 | 22120121 | [Lê Viết Hưng] | Cryptography layer, signatures, Execution layer, state machine, Integration, documentation |
 | 22120329 | [Hoàng Ngọc Thạch] | Consensus layer, voting protocol ,Network simulator, testing|
 
-## 📝 License
-
-This project is submitted as coursework for Blockchain Engineering 2025.  
-© 2025 [Team Name]. All rights reserved.
-
 ---
-
-**Note**: For detailed technical explanation, design decisions, and implementation notes, please refer to `REPORT.pdf`.
