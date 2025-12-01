@@ -327,13 +327,10 @@ Lab01_ID1_ID2_ID3_ID4_ID5/
 
 ## 👥 Team Members
 
-| Student ID | Name | Contribution |
-|------------|------|--------------|
-| ID1 | [Name 1] | Cryptography layer, signatures |
-| ID2 | [Name 2] | Consensus layer, voting protocol |
-| ID3 | [Name 3] | Execution layer, state machine |
-| ID4 | [Name 4] | Network simulator, testing |
-| ID5 | [Name 5] | Integration, documentation |
+| Student ID | Name       | Contribution |
+|------------|------------|--------------|
+| 22120121 | [Lê Viết Hưng] | Cryptography layer, signatures, Execution layer, state machine, Integration, documentation |
+| 22120329 | [Hoàng Ngọc Thạch] | Consensus layer, voting protocol ,Network simulator, testing|
 
 ## 📝 License
 
