@@ -6,7 +6,7 @@ A minimal Layer 1 blockchain implementation with fault-tolerant consensus, authe
 
 **Course:** Blockchain Engineering 2025  
 **Lab:** Lab 01 - Minimal Layer 1 Blockchain  
-**Team:** [Your Team ID - ID1_ID2_ID3_ID4_ID5]  
+**Team:** [22120121_22120329]  
 
 ## 🏗️ System Architecture
 
@@ -252,7 +252,9 @@ Lab01_ID1_ID2_ID3_ID4_ID5/
 │   ├── test_block.py            # Block tests
 │   ├── test_consensus.py        # Consensus tests
 │   ├── test_network.py          # Network tests
+    ├── test_security            # Attack tests 
 │   └── test_e2e.py              # End-to-end tests
+|   
 ├── config/                      # Configuration files
 │   ├── chain_config.json        # Chain parameters
 │   └── network_config.json      # Network scenarios
